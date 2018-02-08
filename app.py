@@ -1,4 +1,6 @@
 from flask import Flask, jsonify, request
+import datetime
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -12,11 +14,32 @@ def message():
     content = request.json['content']
     response = content
 
+
+    date = datetime.date.today()
+    today = date.strftime("%m/%d")
+
+
+    r = requests.get('http://zangsisi.net/')
+
+    plain_text = r.text
+
+    soup = BeautifulSoup(plain_text, 'html.parser')
+    recent_list = soup.select('#recent-manga')
+
+    text = ''
+    for selector in recent_list:
+        for a in selector.select('.list'):
+            for b in a.select('.date'):
+                if today == b.string:
+                    text += "★☆★☆" + today + " 만화 리스트★☆★☆\n"
+                    for c in a.select('.contents > a'):
+                        text += c.contents[0], c.contents[1].string + "\n"
+
     if response == 'ㅁㅎ' or response == '만화':
         return jsonify(
             {
                 'message': {
-                    'text': '만화목록'
+                    'text': text
                 },
                 'keyboard': {
                     'type': 'text'
